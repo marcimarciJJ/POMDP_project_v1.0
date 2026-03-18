@@ -1,0 +1,39 @@
+# POMDP Experiment Configuration
+
+qmdp:
+  epsilon: 1.0e-6
+  max_iterations: 100
+
+pbvi:
+  epsilon: 1.0e-6
+  max_iterations: 100
+  num_belief_points: null
+  min_iterations: 10
+
+witness:
+  epsilon: 1.0e-6
+  max_iterations: 100
+
+incremental_pruning:
+  epsilon: 1.0e-6
+  max_iterations: 100
+
+environment:
+  gamma: 0.95
+  random_seed: 42
+
+grids:
+  "3x3":
+    width: 3
+    height: 3
+    exit_cell: [3, 2]
+    traps: [[1, 1]]
+    trees: [[2, 2]]
+    robot_start: [1, 3]
+    initial_belief: "deterministic"
+
+output:
+  results_dir: "./results"
+  save_format: ["json", "pickle"]
+  generate_plots: true
+  plot_dpi: 300
