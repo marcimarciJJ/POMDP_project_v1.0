@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Dict, Any
 
 
-class POMMDPFileExporter:
+class POMDPFileExporter:
     """Export POMDP model to standard .pomdp file format."""
     
     @staticmethod

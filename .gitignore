@@ -1,3 +1,35 @@
 __pycache__/
 *.pyc
+*.pyo
 .ipynb_checkpoints/
+
+# Generated data and outputs
+data/results/
+data/solutions/
+results/
+*.png
+*.csv
+
+# Python build artifacts
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*~
+
+# External compilation artifacts
+external/pomdp-solve/**/*.o
+external/pomdp-solve/**/*.a
+external/pomdp-solve/config.status
+external/pomdp-solve/config.log

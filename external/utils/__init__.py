@@ -1,4 +1,4 @@
 """External Solver Utilities"""
-from .exporter import POMMDPFileExporter
+from .exporter import POMDPFileExporter
 
-__all__ = ['POMMDPFileExporter']
+__all__ = ['POMDPFileExporter']

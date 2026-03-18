@@ -58,6 +58,15 @@ class ExactSolver(BasePOMDPSolver):
             
             print(f"Solver output: {result.stdout}")
         
+        except subprocess.TimeoutExpired:
+            print(f"Error calling external solver: solver timed out after 300 seconds")
+            self.policy = np.zeros(self.nS, dtype=int)
+            self.value_function = np.zeros(self.nS)
+            self.convergence_time = 0.0
+            self.iterations = 0
+            self.final_error = 0.0
+            return self._create_result(epsilon)
+
         except Exception as e:
             print(f"Error calling external solver: {e}")
             self.policy = np.zeros(self.nS, dtype=int)
@@ -84,12 +93,12 @@ class ExactSolver(BasePOMDPSolver):
     def _export_model(self, output_file: str):
         """Export model to .pomdp file format."""
         try:
-            from external.utils.exporter import POMMDPFileExporter
+            from external.utils.exporter import POMDPFileExporter
         except:
             from pathlib import Path
             import sys
             sys.path.insert(0, str(Path(__file__).parent.parent / 'utils'))
-            from exporter import POMMDPFileExporter
+            from exporter import POMDPFileExporter
         
         model_data = {
             'S': self.S,
@@ -100,7 +109,7 @@ class ExactSolver(BasePOMDPSolver):
             'R': self.R,
             'gamma': self.gamma
         }
-        POMMDPFileExporter.export(model_data, output_file)
+        POMDPFileExporter.export(model_data, output_file)
     
     def _parse_policy_file(self, policy_file: str) -> Tuple[np.ndarray, np.ndarray]:
         """Parse policy file output from pomdp-solve."""

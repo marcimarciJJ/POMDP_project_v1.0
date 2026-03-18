@@ -130,10 +130,11 @@ class PBVISolver(BasePOMDPSolver):
     def _extract_policy_from_alphas(self, alphas: List[np.ndarray],
                                     beliefs: List[np.ndarray]):
         """Extract policy and value function from alpha vectors."""
-        self.value_function = np.array([
-            max((alpha @ self.b0) for alpha in alphas)
-            for _ in range(self.nS)
-        ])
+        self.value_function = np.zeros(self.nS)
+        for s in range(self.nS):
+            b_s = np.zeros(self.nS)
+            b_s[s] = 1.0
+            self.value_function[s] = max(alpha @ b_s for alpha in alphas)
         
         self.policy = np.zeros(self.nS, dtype=int)
         for s in range(self.nS):
