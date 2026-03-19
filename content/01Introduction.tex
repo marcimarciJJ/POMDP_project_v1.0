@@ -1,0 +1,104 @@
+\chapter{Introduction}
+\label{chap:introduction}
+
+\section{Research Background}
+
+Many real-world decision problems require an agent to act under uncertainty.
+A robot trying to navigate an indoor environment cannot always know its exact position.
+A medical system must choose treatments based on symptoms rather than confirmed diagnoses.
+What these problems share is that the agent must act even when the current state of the world is not directly visible.
+
+The Partially Observable Markov Decision Process (POMDP) is a mathematical framework designed for exactly this kind of problem \cite{astrom1965optimal,kaelblingPlanningActingPartially1998}.
+It extends the standard Markov Decision Process (MDP) with an observation model: the agent receives noisy signals about the state rather than seeing the state itself \cite{algorithmsSequentialDecisionMaking}.
+The key idea is the belief state, which is a probability distribution over all possible states.
+The agent maintains and updates this belief after each observation, then chooses actions based on it \cite{pomdpIntroNotes}.
+
+POMDPs have proven useful in many domains.
+In robotics, they are used for navigation, manipulation, and dialogue systems \cite{kurniawatiPartiallyObservableMarkov2022,lauriPartiallyObservableMarkov2023,pajarinenPOMDPPlanningObject2023}.
+They have also been applied in recommendation systems \cite{mdpBasedRecommenderSystem} and other sequential decision settings.
+
+Despite their expressive power, POMDPs are computationally demanding.
+The belief state lives in a continuous space, which makes exact computation expensive.
+It has been shown that exact POMDP planning is PSPACE-complete in the worst case \cite{cassandra1994acting}.
+The value function is piecewise linear and convex (PWLC) \cite{smallwood1973optimal}, and the number of linear pieces can grow exponentially across iterations.
+This has motivated the development of approximate methods \cite{shaniSurveyPointbasedPOMDP2013}.
+
+This thesis presents a tool for running and analyzing POMDP solvers.
+The tool integrates four solvers: two exact solvers (Witness and IP, accessed through a C library) and two approximate solvers (QMDP and PBVI, implemented in Python).
+A grid-based benchmark environment called Foggy Forest is used to evaluate and compare the solvers.
+The focus is on building a usable system and studying solver behavior through systematic experiments.
+
+
+\section{Related Work}
+
+POMDP research goes back to the late 1960s.
+\AA{}str\"{o}m \cite{astrom1965optimal} first formulated the optimal control problem with incomplete state observation.
+Smallwood and Sondik \cite{smallwood1973optimal} later showed that the optimal value function for a finite-horizon POMDP is piecewise linear and convex, which opened the door to exact dynamic programming algorithms.
+Kaelbling et al. \cite{kaelblingPlanningActingPartially1998} gave a modern treatment of the framework and helped establish it as a standard planning model.
+
+Exact POMDP solvers grew out of this theoretical foundation.
+Cassandra et al. \cite{cassandra1994acting} implemented the Witness algorithm and released \texttt{pomdp-solve}, one of the earliest practical solvers.
+Incremental pruning \cite{incrementalPruningNotes} improved the efficiency of exact backup operations.
+However, exact methods scale poorly because the value function representation grows with each planning step.
+This limits their use to small problems.
+
+Point-based methods addressed the scalability problem by working with a sampled set of belief points rather than the full belief space.
+Pineau et al. \cite{pineauPointbasedValueIteration} proposed Point-Based Value Iteration (PBVI), which showed that a small set of belief points is often enough to produce near-optimal policies.
+Several variants followed \cite{shaniSurveyPointbasedPOMDP2013}.
+Online planning algorithms offer another direction by computing policies only for the current belief state, rather than the whole space \cite{onlinePlanningAlgorithmsPOMDPs}.
+
+The POMDP framework has seen growing interest in robotics in recent years.
+Kurniawati \cite{kurniawatiPartiallyObservableMarkov2022} provides a broad review of POMDP applications in autonomous systems.
+Lauri et al. \cite{lauriPartiallyObservableMarkov2023} and Pajarinen et al. \cite{pajarinenPOMDPPlanningObject2023} discuss applications to robot manipulation and planning under perception uncertainty.
+These papers show that POMDPs remain an active research area.
+
+Tools for understanding and visualizing POMDP solver behavior are less studied.
+McGregor et al. \cite{mcgregorInteractiveVisualizationTesting2017} built a visualization system for exploring POMDP policies interactively.
+Laforest et al. \cite{laforestPostHocInterpretationPOMDP} studied how to interpret the decisions of POMDP-based agents after execution.
+In the broader explainable AI community, Wells \cite{wellsExplainableAIReinforcement2021} and Vouros \cite{vourosExplainableDeepReinforcement2023} review methods for making reinforcement learning agents more transparent.
+These works highlight a gap: most POMDP tooling focuses on solving, not on analysis and visualization.
+
+Visualization design principles are also relevant to this thesis.
+Tversky \cite{tverskyVisualizingThoughtMapping} discusses how visual representations help people reason about complex structures.
+Inbar et al. \cite{inbarMinimalismInformationVisualization2007} argue that effective information visualization should avoid unnecessary visual elements.
+These ideas inform the visualization choices in the tool.
+
+
+\section{Contributions}
+
+This thesis makes three contributions.
+
+\textbf{Engineering contributions.}
+We design and implement a unified POMDP analysis tool that connects four solvers through a consistent interface.
+The exact solvers (Witness and IP) are wrapped from a C library, and the approximate solvers (QMDP and PBVI) are implemented directly in Python, all sharing the same input/output format.
+The tool supports automated experiment execution and result collection across solvers and environment configurations.
+
+\textbf{Empirical validation contributions.}
+We conduct controlled experiments on the Foggy Forest benchmark and document how solver behavior varies with problem size and planning horizon.
+The experiments show how the number of alpha vectors grows for exact solvers, how PBVI maintains more stable convergence than QMDP in partially observable settings, and how the value of observations differs across grid positions.
+These findings provide a concrete characterization of solver trade-offs on a realistic benchmark.
+
+\textbf{Visualization contributions.}
+We develop a visualization module that generates convergence curves, policy heatmaps over the grid, and diagrams of the belief simplex for selected runs.
+The design follows minimalist principles to make solver differences easy to see at a glance.
+This module is intended to support future analysis and debugging of POMDP solvers.
+
+
+\section{Thesis Organization}
+
+The rest of this thesis is structured as follows.
+
+Chapter~2 introduces the theoretical background.
+It covers Markov Decision Processes and Partially Observable MDPs, discusses the computational challenges of exact POMDP solving, and explains the piecewise linear and convex structure of the value function that motivates the algorithms studied in later chapters.
+
+Chapter~3 describes the four solvers used in this thesis and justifies their selection.
+It explains why the exact solvers are accessed through the C-based \texttt{pomdp-solve} library and why the approximate solvers are implemented in Python.
+It also describes how the solver choices relate to the Foggy Forest benchmark.
+
+Chapter~4 describes the implementation of the tool.
+It covers the Foggy Forest environment model, the solver integration architecture, and the data collection pipeline.
+
+Chapter~5 presents the experimental results.
+It reports on convergence behavior, policy quality, and computation time for all four solvers across two grid sizes.
+
+Chapter~6 summarizes the contributions and suggests directions for future work.
