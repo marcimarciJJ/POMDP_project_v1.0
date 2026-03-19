@@ -1,0 +1,108 @@
+\chapter{Solution Algorithms}
+\label{chap:algorithms}
+
+This chapter describes the four POMDP solvers used in this thesis and explains why they were chosen.
+Section~\ref{sec:scope} defines the scope of the solver set.
+Section~\ref{sec:exact} describes the exact solvers accessed through the \texttt{pomdp-solve} C library.
+Section~\ref{sec:approx} describes the approximate solvers implemented in Python.
+Section~\ref{sec:justify} justifies the choice of these solvers for the Foggy Forest benchmark.
+Section~\ref{sec:summary3} summarizes.
+
+
+\section{Scope and Solver Set}
+\label{sec:scope}
+
+This thesis studies four solvers: Witness, Incremental Pruning (IP), QMDP, and Point-Based Value Iteration (PBVI).
+They represent two distinct approaches to POMDP solving.
+Witness and IP are exact algorithms that compute the optimal value function up to convergence.
+QMDP and PBVI are approximate algorithms that sacrifice optimality for tractability.
+
+The four solvers cover a useful range.
+Exact solvers show what the optimal solution looks like on small problems.
+Approximate solvers show what is achievable on larger ones.
+Comparing the two groups on the same benchmark reveals the cost of approximation and the benefit of scalability.
+
+The solver set was chosen to be minimal but informative.
+Adding more solvers would complicate the comparison without adding much to the analysis.
+These four solvers represent the main families that appear in the POMDP literature \cite{shaniSurveyPointbasedPOMDP2013}.
+
+
+\section{Exact Solvers via \texttt{pomdp-solve}}
+\label{sec:exact}
+
+The exact solvers are accessed through the \texttt{pomdp-solve} library, a well-established C implementation of several exact POMDP algorithms.
+Cassandra et al. \cite{cassandra1994acting} developed the original solver and have maintained it over many years.
+Using this library rather than reimplementing the algorithms avoids introducing bugs in the core solver logic.
+
+The Witness algorithm was one of the first practical exact POMDP solvers.
+It performs exact dynamic programming by finding the alpha vectors that are needed to represent the optimal value function at each step.
+It uses a ``witness point'' procedure to enumerate these vectors efficiently.
+
+Incremental Pruning (IP) is another exact algorithm that improves on earlier approaches by interleaving the pruning of dominated vectors with the enumeration step \cite{incrementalPruningNotes}.
+This reduces the number of intermediate vectors that must be kept in memory.
+Both Witness and IP produce the same optimal solution in the end; they differ in computational efficiency.
+
+The C implementation is mature and well-tested.
+Interfacing with it from Python through a subprocess or wrapper is straightforward.
+This approach is also commonly used in the POMDP research community \cite{gaoTechnicalQASite2021}.
+
+
+\section{Approximate Solvers in Python}
+\label{sec:approx}
+
+The two approximate solvers, QMDP and PBVI, are implemented directly in Python.
+Python was chosen because it offers easy integration with numerical libraries and visualization tools.
+Both algorithms are conceptually simple enough that a clean Python implementation is feasible without significant performance loss for the problem sizes considered here.
+
+QMDP \cite{zhangModelApproximationScheme1997} is a fast heuristic that approximates the POMDP value function by assuming the current uncertainty will resolve after the next step.
+It solves the underlying MDP first and then uses the resulting value function to choose actions.
+The policy is:
+\begin{equation}
+  \pi_\text{QMDP}(b) = \arg\max_{a \in A} \sum_{s \in S} Q^*(s, a)\, b(s),
+\end{equation}
+where $Q^*(s, a)$ is the optimal MDP Q-value.
+QMDP runs very fast but can fail when information gathering is important, because it does not model the value of reducing uncertainty.
+
+PBVI \cite{pineauPointbasedValueIteration} maintains a set of belief points and performs exact backups only at those points.
+The algorithm starts with a small set of beliefs and adds more over time.
+For each belief $b$ in the set, the update computes:
+\begin{equation}
+  \alpha^*(b) = \arg\max_{\alpha \in \Gamma'} \alpha \cdot b,
+\end{equation}
+where $\Gamma'$ is the set of candidate vectors produced by the backup.
+By restricting updates to sampled beliefs, PBVI avoids the exponential blowup of the full alpha vector set \cite{spaanPointbasedPOMDPAlgorithm2004}.
+The resulting policy is near-optimal over the sampled region of the belief space.
+
+
+\section{Why These Solvers for Foggy Forest}
+\label{sec:justify}
+
+The Foggy Forest environment is a grid-based navigation benchmark with partial observability.
+The agent moves on a 2D grid and receives noisy observations about its surroundings.
+The environment is small enough for exact solvers to work, but large enough to make the computational cost of exact methods visible.
+
+Using exact solvers on this benchmark lets us measure the growth of the alpha vector set as the horizon increases.
+This directly illustrates the computational challenge described in Chapter~2.
+The exact solution also serves as a reference point for evaluating the quality of the approximate solutions.
+
+QMDP and PBVI were chosen because they represent two different approximation strategies.
+QMDP is a policy heuristic: it ignores future uncertainty and plans as if the state were observable.
+PBVI is a value function approximation: it covers the belief space with sample points and computes local backups.
+Comparing these two on Foggy Forest reveals how each approximation affects solution quality and convergence.
+
+The combination of C-based exact solvers and Python-based approximate solvers reflects a practical engineering trade-off.
+Exact solvers are fast because they are written in C, which matters when the alpha vector set is large.
+Approximate solvers are implemented in Python because they need to integrate tightly with the belief update logic, visualization module, and experiment pipeline.
+This division of responsibility keeps the codebase manageable while still supporting meaningful comparisons.
+
+
+\section{Summary}
+\label{sec:summary3}
+
+This chapter described the four solvers used in this thesis.
+Witness and IP provide exact solutions and are accessed through the \texttt{pomdp-solve} C library.
+QMDP and PBVI provide approximate solutions and are implemented in Python.
+
+The choice of solvers reflects the goal of the thesis: to study POMDP solver behavior on a controlled benchmark.
+The exact solvers establish what the optimal solution looks like, and the approximate solvers show what is achievable at lower computational cost.
+Chapter~4 describes how these solvers are integrated into the analysis tool and applied to the Foggy Forest environment.
